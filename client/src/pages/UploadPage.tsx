@@ -9,8 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import Navbar from '@/components/layout/Navbar';
 import { useUploadStore } from '@/stores/uploadStore';
-import { TEMPLATE_INFO, TONE_INFO } from '@/types';
-import type { TemplateType, ToneType, OutputFormat } from '@/types';
+import { TEMPLATE_INFO, TONE_INFO, PROCESSING_MODE_INFO } from '@/types';
+import type { TemplateType, ToneType, OutputFormat, ProcessingMode } from '@/types';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import {
@@ -23,7 +23,7 @@ const STEPS = ['Upload File', 'Select Template', 'Customize', 'Confirm'];
 
 export default function UploadPage() {
   const navigate = useNavigate();
-  const { file, templateType, tone, outputFormat, step, setFile, setTemplateType, setTone, setOutputFormat, setStep, reset } = useUploadStore();
+  const { file, templateType, tone, outputFormat, processingMode, step, setFile, setTemplateType, setTone, setOutputFormat, setProcessingMode, setStep, reset } = useUploadStore();
   const [submitting, setSubmitting] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -59,6 +59,7 @@ export default function UploadPage() {
       formData.append('templateType', templateType);
       formData.append('tone', tone);
       formData.append('outputFormat', outputFormat);
+      formData.append('processingMode', processingMode);
 
       const res = await api.post('/documents/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -179,6 +180,34 @@ export default function UploadPage() {
         {/* Step 2: Customize */}
         {step === 2 && (
           <div className="animate-fade-in space-y-8">
+            {/* Processing Mode */}
+            <Card className="border-border/40 bg-card/50">
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-1">What should AI do?</h3>
+                <p className="text-sm text-muted-foreground mb-4">Choose how AI processes your document</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {(Object.entries(PROCESSING_MODE_INFO) as [ProcessingMode, typeof PROCESSING_MODE_INFO[ProcessingMode]][]).map(([key, info]) => (
+                    <button
+                      key={key}
+                      onClick={() => setProcessingMode(key)}
+                      className={`flex flex-col items-start gap-2 rounded-lg border-2 p-4 text-left transition-all ${
+                        processingMode === key
+                          ? 'border-violet-500 bg-violet-500/5 shadow-md'
+                          : 'border-border hover:border-border/80'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        <span className="text-xl">{info.icon}</span>
+                        <span className="font-medium text-sm">{info.label}</span>
+                        {processingMode === key && <CheckCircle2 className="h-4 w-4 text-violet-500 ml-auto" />}
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{info.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Tone Selection */}
             <Card className="border-border/40 bg-card/50">
               <CardContent className="p-6">
@@ -246,6 +275,7 @@ export default function UploadPage() {
                   {[
                     { label: 'File', value: file?.name || '-', sub: file ? `${(file.size / 1024).toFixed(1)} KB` : '' },
                     { label: 'Template', value: templateType ? TEMPLATE_INFO[templateType].label : '-', sub: templateType ? TEMPLATE_INFO[templateType].icon : '' },
+                    { label: 'AI Mode', value: PROCESSING_MODE_INFO[processingMode].label, sub: PROCESSING_MODE_INFO[processingMode].icon },
                     { label: 'Tone', value: TONE_INFO[tone].label, sub: TONE_INFO[tone].description },
                     { label: 'Output', value: outputFormat.toUpperCase(), sub: '' },
                   ].map((row) => (
@@ -297,3 +327,4 @@ export default function UploadPage() {
     </div>
   );
 }
+

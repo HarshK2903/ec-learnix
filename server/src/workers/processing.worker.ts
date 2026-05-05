@@ -1,9 +1,9 @@
 import { Worker, Job } from 'bullmq';
 import { redis } from '../config/redis.js';
-import { DocumentModel } from '../models/Document.js';
+import { DocumentModel, type IChangeSummary } from '../models/Document.js';
 import { extractTextFromDocx, buildFormattedDocx, convertDocxToPdf, ProcessedField } from '../services/document.service.js';
 import { analyzeFields, buildPrompt } from '../services/template.service.js';
-import { callAI } from '../services/ai.service.js';
+import { callAIBatch } from '../services/ai.service.js';
 import { emitProgress, emitComplete, emitError } from '../socket/index.js';
 import path from 'path';
 import fs from 'fs';
@@ -39,92 +39,163 @@ async function processDocument(job: Job<ProcessingJobData>): Promise<void> {
     emitProgress(documentId, { stage: 'analyzing', progress: 25, message: 'Analyzing document structure...' });
     const fieldAnalyses = analyzeFields(extractedText, doc.templateType);
 
-    // 4. Process each field with AI
+    // 4. Collect all fields that need AI processing into a single batch
     const processedFields: ProcessedField[] = [];
-    const changeSummary: Array<{ field: string; action: 'generated' | 'enhanced' | 'unchanged'; description: string }> = [];
+    const changeSummary: IChangeSummary[] = [];
 
-    const fieldsToProcess = fieldAnalyses.filter((a) => a.field.name);
-    const totalFields = fieldsToProcess.length;
+    const processingMode = doc.processingMode || 'both';
+    console.log(`📋 Processing mode: ${processingMode}`);
 
-    for (let i = 0; i < fieldsToProcess.length; i++) {
-      const analysis = fieldsToProcess[i];
-      const progressPercent = 30 + Math.round((i / totalFields) * 50);
+    // Separate fields that need AI vs fields that don't
+    const aiFields: Array<{ name: string; label: string; prompt: string; analysis: typeof fieldAnalyses[0] }> = [];
+    const nonAIFields: typeof fieldAnalyses = [];
 
-      emitProgress(documentId, {
-        stage: 'enhancing',
-        progress: progressPercent,
-        field: analysis.field.label,
-        message: `Processing: ${analysis.field.label} (${i + 1}/${totalFields})`,
-      });
+    for (const analysis of fieldAnalyses) {
+      if (!analysis.field.name) continue;
 
       const prompt = buildPrompt(analysis, extractedText, doc.tone);
 
+      // Apply processing mode filter
       if (prompt) {
-        try {
-          const aiResult = await callAI(prompt);
-          const action = analysis.status === 'MISSING' ? 'generated' : 'enhanced';
+        const isMissing = analysis.status === 'MISSING';
+        const isPresent = analysis.status === 'PRESENT' || analysis.status === 'PARTIAL';
 
-          processedFields.push({
+        // 'enhance' mode: only process fields that EXIST (skip missing)
+        // 'fill_missing' mode: only process MISSING fields (skip existing)
+        // 'both' mode: process everything
+        const shouldProcess =
+          processingMode === 'both' ||
+          (processingMode === 'enhance' && isPresent) ||
+          (processingMode === 'fill_missing' && isMissing);
+
+        if (shouldProcess) {
+          aiFields.push({
             name: analysis.field.name,
             label: analysis.field.label,
-            value: aiResult.trim(),
-            action,
+            prompt,
+            analysis,
           });
-
-          changeSummary.push({
-            field: analysis.field.label,
-            action,
-            description:
-              analysis.status === 'MISSING'
-                ? `${analysis.field.label} was missing — AI generated content`
-                : `${analysis.field.label} was enhanced for better quality and ${doc.tone} tone`,
-          });
-        } catch (aiError) {
-          console.error(`AI error for field ${analysis.field.name}:`, aiError);
-          // Fall back to existing content or empty
-          processedFields.push({
-            name: analysis.field.name,
-            label: analysis.field.label,
-            value: analysis.existingContent || '',
-            action: 'unchanged',
-          });
-          changeSummary.push({
-            field: analysis.field.label,
-            action: 'unchanged',
-            description: `${analysis.field.label} — AI processing failed, kept original`,
-          });
+        } else {
+          // Skipped by mode — keep original content
+          nonAIFields.push(analysis);
         }
       } else {
-        // No AI needed — use existing content or auto-fill
-        let value = analysis.existingContent || '';
+        nonAIFields.push(analysis);
+      }
+    }
 
-        // Auto-fill date if missing
-        if (analysis.field.name === 'date' && !value) {
-          value = new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          });
-        }
+    // Process non-AI fields first
+    for (const analysis of nonAIFields) {
+      let value = analysis.existingContent || '';
 
-        processedFields.push({
-          name: analysis.field.name,
-          label: analysis.field.label,
-          value,
-          action: 'unchanged',
+      // Auto-fill date if missing
+      if (analysis.field.name === 'date' && !value) {
+        value = new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
         });
+      }
 
-        if (value) {
-          changeSummary.push({
-            field: analysis.field.label,
+      processedFields.push({
+        name: analysis.field.name,
+        label: analysis.field.label,
+        value,
+        action: 'unchanged',
+      });
+
+      if (value) {
+        changeSummary.push({
+          field: analysis.field.label,
+          action: 'unchanged',
+          description: `${analysis.field.label} — kept original content`,
+        });
+      }
+    }
+
+    // 5. Process ALL AI fields in a SINGLE batch call
+    if (aiFields.length > 0) {
+      emitProgress(documentId, {
+        stage: 'enhancing',
+        progress: 40,
+        message: `AI processing ${aiFields.length} fields in batch...`,
+      });
+
+      try {
+        console.log(`🤖 Sending batch AI request for ${aiFields.length} fields...`);
+
+        const batchResult = await callAIBatch(
+          aiFields.map((f) => ({ name: f.name, label: f.label, prompt: f.prompt })),
+          doc.templateType,
+          doc.tone
+        );
+
+        console.log(`✅ Batch AI response received. Fields: ${Object.keys(batchResult).join(', ')}`);
+
+        // Map results back to fields
+        for (const aiField of aiFields) {
+          const aiResult = batchResult[aiField.name];
+          const original = aiField.analysis.existingContent || '';
+
+          if (aiResult && aiResult.trim().length > 0) {
+            const action = aiField.analysis.status === 'MISSING' ? 'generated' : 'enhanced';
+
+            processedFields.push({
+              name: aiField.name,
+              label: aiField.label,
+              value: aiResult.trim(),
+              action,
+            });
+
+            changeSummary.push({
+              field: aiField.label,
+              action,
+              description:
+                aiField.analysis.status === 'MISSING'
+                  ? `${aiField.label} was missing — AI generated content`
+                  : `${aiField.label} was enhanced for better quality and ${doc.tone} tone`,
+              originalContent: original.substring(0, 1000),
+              newContent: aiResult.trim().substring(0, 1000),
+            });
+          } else {
+            processedFields.push({
+              name: aiField.name,
+              label: aiField.label,
+              value: original,
+              action: 'unchanged',
+            });
+            changeSummary.push({
+              field: aiField.label,
+              action: 'unchanged',
+              description: `${aiField.label} — AI returned empty, kept original`,
+              originalContent: original.substring(0, 1000),
+              newContent: original.substring(0, 1000),
+            });
+          }
+        }
+      } catch (aiError) {
+        console.error('❌ Batch AI processing failed:', aiError);
+
+        // Fall back — use all original content
+        for (const aiField of aiFields) {
+          processedFields.push({
+            name: aiField.name,
+            label: aiField.label,
+            value: aiField.analysis.existingContent || '',
             action: 'unchanged',
-            description: `${analysis.field.label} — kept original content`,
+          });
+          changeSummary.push({
+            field: aiField.label,
+            action: 'unchanged',
+            description: `${aiField.label} — AI processing failed, kept original`,
           });
         }
       }
     }
 
-    // 5. Build formatted DOCX
+    emitProgress(documentId, { stage: 'enhancing', progress: 80, message: 'AI processing complete' });
+
+    // 6. Build formatted DOCX
     emitProgress(documentId, { stage: 'assembling', progress: 85, message: 'Building formatted document...' });
 
     const outputDir = path.join(process.cwd(), 'outputs', doc.userId.toString());
@@ -135,7 +206,7 @@ async function processDocument(job: Job<ProcessingJobData>): Promise<void> {
 
     let finalOutputPath = docxOutputPath;
 
-    // 6. Convert to PDF if needed
+    // 7. Convert to PDF if needed
     if (doc.outputFormat === 'pdf') {
       emitProgress(documentId, { stage: 'converting', progress: 92, message: 'Converting to PDF...' });
       const pdfOutputPath = path.join(outputDir, `${documentId}.pdf`);
@@ -144,12 +215,11 @@ async function processDocument(job: Job<ProcessingJobData>): Promise<void> {
         finalOutputPath = pdfOutputPath;
       } catch (pdfError) {
         console.error('PDF conversion failed, falling back to DOCX:', pdfError);
-        // Keep DOCX as fallback
         doc.outputFormat = 'docx';
       }
     }
 
-    // 7. Finalize
+    // 8. Finalize
     emitProgress(documentId, { stage: 'finalizing', progress: 98, message: 'Finalizing...' });
 
     doc.outputFilePath = finalOutputPath;
@@ -165,23 +235,22 @@ async function processDocument(job: Job<ProcessingJobData>): Promise<void> {
   } catch (error) {
     console.error(`❌ Processing failed for ${documentId}:`, error);
 
-    // Update document status to failed
     await DocumentModel.findByIdAndUpdate(documentId, {
       status: 'failed',
       errorMessage: error instanceof Error ? error.message : 'Unknown error',
     });
 
     emitError(documentId, error instanceof Error ? error.message : 'Processing failed');
-    throw error; // Let BullMQ handle retry
+    throw error;
   }
 }
 
 export function startWorker(): Worker {
   const worker = new Worker('document-processing', processDocument, {
     connection: redis,
-    concurrency: 2,
+    concurrency: 1, // Process one at a time to avoid rate limits
     limiter: {
-      max: 5,
+      max: 3,
       duration: 60000,
     },
   });
@@ -197,3 +266,4 @@ export function startWorker(): Worker {
   console.log('🔧 BullMQ processing worker started');
   return worker;
 }
+

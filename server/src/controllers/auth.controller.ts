@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 import { User } from '../models/User.js';
 import {
   generateAccessToken,
@@ -14,6 +15,17 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     if (!name || !email || !password) {
       res.status(400).json({ message: 'Name, email, and password are required' });
+      return;
+    }
+
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({ message: 'Please provide a valid email address' });
+      return;
+    }
+
+    if (name.trim().length < 2) {
+      res.status(400).json({ message: 'Name must be at least 2 characters' });
       return;
     }
 
@@ -55,6 +67,15 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     console.error('Signup error:', error);
+    if (error instanceof mongoose.Error.ValidationError) {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      res.status(400).json({ message: messages[0] || 'Validation failed' });
+      return;
+    }
+    if ((error as any)?.code === 11000) {
+      res.status(409).json({ message: 'Email already registered' });
+      return;
+    }
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -65,6 +86,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     if (!email || !password) {
       res.status(400).json({ message: 'Email and password are required' });
+      return;
+    }
+
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({ message: 'Please provide a valid email address' });
       return;
     }
 
@@ -99,6 +126,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     console.error('Login error:', error);
+    if (error instanceof mongoose.Error.ValidationError) {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      res.status(400).json({ message: messages[0] || 'Validation failed' });
+      return;
+    }
     res.status(500).json({ message: 'Internal server error' });
   }
 };

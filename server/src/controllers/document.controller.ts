@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import path from 'path';
 import fs from 'fs';
+import mongoose from 'mongoose';
 import { AuthRequest } from '../middleware/auth.middleware.js';
 import { DocumentModel } from '../models/Document.js';
 import { User } from '../models/User.js';
@@ -14,7 +15,7 @@ export const uploadDocument = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { templateType, tone, outputFormat } = req.body;
+    const { templateType, tone, outputFormat, processingMode } = req.body;
     const file = req.file;
 
     if (!file) {
@@ -29,7 +30,25 @@ export const uploadDocument = async (
 
     const validTemplates = ['journal', 'cv', 'biodata', 'blogpost', 'report'];
     if (!validTemplates.includes(templateType)) {
-      res.status(400).json({ message: 'Invalid template type' });
+      res.status(400).json({ message: `Invalid template type. Must be one of: ${validTemplates.join(', ')}` });
+      return;
+    }
+
+    const validTones = ['formal', 'casual', 'polite', 'aggressive', 'academic'];
+    if (tone && !validTones.includes(tone)) {
+      res.status(400).json({ message: `Invalid tone. Must be one of: ${validTones.join(', ')}` });
+      return;
+    }
+
+    const validFormats = ['docx', 'pdf'];
+    if (outputFormat && !validFormats.includes(outputFormat)) {
+      res.status(400).json({ message: 'Invalid output format. Must be docx or pdf' });
+      return;
+    }
+
+    const validModes = ['enhance', 'fill_missing', 'both'];
+    if (processingMode && !validModes.includes(processingMode)) {
+      res.status(400).json({ message: `Invalid processing mode. Must be one of: ${validModes.join(', ')}` });
       return;
     }
 
@@ -64,6 +83,7 @@ export const uploadDocument = async (
       outputFormat: outputFormat || 'docx',
       templateType,
       tone: tone || 'formal',
+      processingMode: processingMode || 'both',
       status: 'uploaded',
     });
 
@@ -89,6 +109,11 @@ export const uploadDocument = async (
     });
   } catch (error) {
     console.error('Upload error:', error);
+    if (error instanceof mongoose.Error.ValidationError) {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      res.status(400).json({ message: messages[0] || 'Validation failed' });
+      return;
+    }
     res.status(500).json({ message: 'Failed to upload document' });
   }
 };
@@ -127,7 +152,7 @@ export const getDocument = async (
 
     res.json({
       document: {
-        id: doc._id,
+        _id: doc._id,
         originalFileName: doc.originalFileName,
         outputFormat: doc.outputFormat,
         templateType: doc.templateType,
@@ -142,6 +167,10 @@ export const getDocument = async (
     });
   } catch (error) {
     console.error('Get document error:', error);
+    if (error instanceof mongoose.Error.CastError) {
+      res.status(400).json({ message: 'Invalid document ID' });
+      return;
+    }
     res.status(500).json({ message: 'Failed to fetch document' });
   }
 };
@@ -177,6 +206,10 @@ export const downloadDocument = async (
     res.download(doc.outputFilePath, downloadName);
   } catch (error) {
     console.error('Download error:', error);
+    if (error instanceof mongoose.Error.CastError) {
+      res.status(400).json({ message: 'Invalid document ID' });
+      return;
+    }
     res.status(500).json({ message: 'Failed to download document' });
   }
 };
@@ -209,6 +242,11 @@ export const deleteDocument = async (
     res.json({ message: 'Document deleted successfully' });
   } catch (error) {
     console.error('Delete error:', error);
+    if (error instanceof mongoose.Error.CastError) {
+      res.status(400).json({ message: 'Invalid document ID' });
+      return;
+    }
     res.status(500).json({ message: 'Failed to delete document' });
   }
 };
+

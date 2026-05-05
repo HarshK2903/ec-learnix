@@ -4,6 +4,7 @@ import OpenAI from 'openai';
 
 let geminiClient: GoogleGenerativeAI | null = null;
 let openaiClient: OpenAI | null = null;
+let groqClient: OpenAI | null = null;
 
 export function getGeminiClient(): GoogleGenerativeAI {
   if (!geminiClient) {
@@ -25,6 +26,23 @@ export function getOpenAIClient(): OpenAI {
   return openaiClient;
 }
 
-export function getAIProvider(): 'gemini' | 'openai' {
+/**
+ * Groq uses OpenAI-compatible API with a different base URL.
+ */
+export function getGroqClient(): OpenAI {
+  if (!groqClient) {
+    if (!env.GROQ_API_KEY) {
+      throw new Error('GROQ_API_KEY is not set');
+    }
+    groqClient = new OpenAI({
+      apiKey: env.GROQ_API_KEY,
+      baseURL: 'https://api.groq.com/openai/v1',
+    });
+  }
+  return groqClient;
+}
+
+export function getAIProvider(): 'gemini' | 'openai' | 'groq' {
   return env.AI_PROVIDER;
 }
+

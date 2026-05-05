@@ -23,6 +23,11 @@ export default function LoginPage() {
       toast.error('Please fill in all fields');
       return;
     }
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address (e.g. you@example.com)');
+      return;
+    }
     setLoading(true);
     try {
       const res = await api.post('/auth/login', { email, password });

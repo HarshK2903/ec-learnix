@@ -11,8 +11,10 @@ export const env = {
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret',
   JWT_ACCESS_EXPIRY: process.env.JWT_ACCESS_EXPIRY || '15m',
   JWT_REFRESH_EXPIRY: process.env.JWT_REFRESH_EXPIRY || '7d',
-  AI_PROVIDER: (process.env.AI_PROVIDER || 'gemini') as 'gemini' | 'openai',
+  AI_PROVIDER: (process.env.AI_PROVIDER || 'gemini') as 'gemini' | 'openai' | 'groq',
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+  GROQ_API_KEY: process.env.GROQ_API_KEY || '',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
 };
+

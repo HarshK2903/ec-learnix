@@ -83,15 +83,88 @@ function createHeading(text: string, level: typeof HeadingLevel[keyof typeof Hea
   });
 }
 
-function createBody(text: string) {
-  return text.split('\n').filter(Boolean).map(
-    (line) =>
-      new Paragraph({
-        children: [new TextRun({ text: line.trim(), size: 24, font: 'Times New Roman' })],
-        spacing: { after: 120, line: 360 },
-        alignment: AlignmentType.JUSTIFIED,
-      })
-  );
+function createBody(text: string): Paragraph[] {
+  if (!text) return [];
+  const paragraphs: Paragraph[] = [];
+  const lines = text.split('\n');
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    // Markdown heading ## or ###
+    const h2Match = line.match(/^#{2}\s+(.+)/);
+    const h3Match = line.match(/^#{3}\s+(.+)/);
+    if (h2Match) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun({ text: h2Match[1], bold: true, size: 28, font: 'Times New Roman' })],
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 240, after: 120 },
+      }));
+      continue;
+    }
+    if (h3Match) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun({ text: h3Match[1], bold: true, size: 26, font: 'Times New Roman' })],
+        heading: HeadingLevel.HEADING_3,
+        spacing: { before: 200, after: 100 },
+      }));
+      continue;
+    }
+
+    // Bullet points (-, *, •)
+    const bulletMatch = line.match(/^[-*•]\s+(.+)/);
+    if (bulletMatch) {
+      paragraphs.push(new Paragraph({
+        children: parseInlineFormatting(bulletMatch[1], 24),
+        bullet: { level: 0 },
+        spacing: { after: 60 },
+      }));
+      continue;
+    }
+
+    // Numbered list (1. 2. 3.)
+    const numMatch = line.match(/^(\d+)[.)]\s+(.+)/);
+    if (numMatch) {
+      paragraphs.push(new Paragraph({
+        children: parseInlineFormatting(numMatch[2], 24),
+        numbering: { reference: 'default-numbering', level: 0 },
+        spacing: { after: 60 },
+      }));
+      continue;
+    }
+
+    // Regular paragraph with inline bold/italic parsing
+    paragraphs.push(new Paragraph({
+      children: parseInlineFormatting(line, 24),
+      spacing: { after: 120, line: 360 },
+      alignment: AlignmentType.JUSTIFIED,
+    }));
+  }
+
+  return paragraphs;
+}
+
+/**
+ * Parse inline markdown formatting: **bold**, *italic*
+ */
+function parseInlineFormatting(text: string, fontSize: number): TextRun[] {
+  const runs: TextRun[] = [];
+  // Match **bold** and *italic* patterns
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+
+  for (const part of parts) {
+    if (!part) continue;
+    if (part.startsWith('**') && part.endsWith('**')) {
+      runs.push(new TextRun({ text: part.slice(2, -2), bold: true, size: fontSize, font: 'Times New Roman' }));
+    } else if (part.startsWith('*') && part.endsWith('*')) {
+      runs.push(new TextRun({ text: part.slice(1, -1), italics: true, size: fontSize, font: 'Times New Roman' }));
+    } else {
+      runs.push(new TextRun({ text: part, size: fontSize, font: 'Times New Roman' }));
+    }
+  }
+
+  return runs.length > 0 ? runs : [new TextRun({ text, size: fontSize, font: 'Times New Roman' })];
 }
 
 function buildBlogPostDocx(fields: ProcessedField[]): Document {
@@ -568,3 +641,4 @@ export async function convertDocxToPdf(
   });
   await browser.close();
 }
+

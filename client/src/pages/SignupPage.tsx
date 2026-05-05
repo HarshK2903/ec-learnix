@@ -25,6 +25,15 @@ export default function SignupPage() {
       toast.error('Please fill in all fields');
       return;
     }
+    if (name.trim().length < 2) {
+      toast.error('Name must be at least 2 characters');
+      return;
+    }
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address (e.g. you@example.com)');
+      return;
+    }
     if (password.length < 8) {
       toast.error('Password must be at least 8 characters');
       return;

@@ -3,12 +3,15 @@ import mongoose, { Schema, Document as MongoDocument } from 'mongoose';
 export type TemplateType = 'journal' | 'cv' | 'biodata' | 'blogpost' | 'report';
 export type ToneType = 'formal' | 'casual' | 'polite' | 'aggressive' | 'academic';
 export type OutputFormat = 'docx' | 'pdf';
+export type ProcessingMode = 'enhance' | 'fill_missing' | 'both';
 export type DocumentStatus = 'uploaded' | 'processing' | 'completed' | 'failed';
 
 export interface IChangeSummary {
   field: string;
   action: 'generated' | 'enhanced' | 'unchanged';
   description: string;
+  originalContent?: string;
+  newContent?: string;
 }
 
 export interface IDocument extends MongoDocument {
@@ -19,6 +22,7 @@ export interface IDocument extends MongoDocument {
   outputFormat: OutputFormat;
   templateType: TemplateType;
   tone: ToneType;
+  processingMode: ProcessingMode;
   status: DocumentStatus;
   changeSummary: IChangeSummary[];
   errorMessage: string | null;
@@ -37,6 +41,8 @@ const changeSummarySchema = new Schema<IChangeSummary>(
       required: true,
     },
     description: { type: String, required: true },
+    originalContent: { type: String, default: '' },
+    newContent: { type: String, default: '' },
   },
   { _id: false }
 );
@@ -76,6 +82,11 @@ const documentSchema = new Schema<IDocument>(
       enum: ['formal', 'casual', 'polite', 'aggressive', 'academic'],
       default: 'formal',
     },
+    processingMode: {
+      type: String,
+      enum: ['enhance', 'fill_missing', 'both'],
+      default: 'both',
+    },
     status: {
       type: String,
       enum: ['uploaded', 'processing', 'completed', 'failed'],
@@ -106,3 +117,4 @@ const documentSchema = new Schema<IDocument>(
 documentSchema.index({ userId: 1, createdAt: -1 });
 
 export const DocumentModel = mongoose.model<IDocument>('Document', documentSchema);
+

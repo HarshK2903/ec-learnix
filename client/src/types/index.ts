@@ -13,12 +13,15 @@ export interface AuthResponse {
 export type TemplateType = 'journal' | 'cv' | 'biodata' | 'blogpost' | 'report';
 export type ToneType = 'formal' | 'casual' | 'polite' | 'aggressive' | 'academic';
 export type OutputFormat = 'docx' | 'pdf';
+export type ProcessingMode = 'enhance' | 'fill_missing' | 'both';
 export type DocumentStatus = 'uploaded' | 'processing' | 'completed' | 'failed';
 
 export interface ChangeSummary {
   field: string;
   action: 'generated' | 'enhanced' | 'unchanged';
   description: string;
+  originalContent?: string;
+  newContent?: string;
 }
 
 export interface DocumentItem {
@@ -56,3 +59,10 @@ export const TONE_INFO: Record<ToneType, { label: string; description: string }>
   aggressive: { label: 'Aggressive', description: 'Bold and assertive' },
   academic: { label: 'Academic', description: 'Scholarly and research-oriented' },
 };
+
+export const PROCESSING_MODE_INFO: Record<ProcessingMode, { label: string; icon: string; description: string }> = {
+  enhance: { label: 'Enhance Only', icon: '✨', description: 'Improve existing content quality, grammar, and tone — don\'t add anything new' },
+  fill_missing: { label: 'Fill Missing Only', icon: '📝', description: 'Generate content only for missing sections — leave existing content untouched' },
+  both: { label: 'Enhance + Fill Missing', icon: '🚀', description: 'Enhance existing content AND generate any missing sections (recommended)' },
+};
+
