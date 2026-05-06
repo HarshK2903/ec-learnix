@@ -11,7 +11,7 @@ import authRoutes from './routes/auth.routes.js';
 import documentRoutes from './routes/document.routes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
+import fs from 'fs';
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,17 +34,27 @@ app.use('/api/documents', documentRoutes);
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
-
 if (env.NODE_ENV === 'production') {
-  // From server/dist -> ../../client/dist
-  const clientDistPath = path.resolve(__dirname, '../../client/dist');
-  app.use(express.static(clientDistPath));
-  // SPA fallback for non-API routes
-  app.get(/^\/(?!api).*/, (_req, res) => {
-    res.sendFile(path.join(clientDistPath, 'index.html'));
-  });
-}
+  const candidatePaths = [
+    path.resolve(process.cwd(), 'client/dist'),
+    path.resolve(__dirname, '../../client/dist'),
+    path.resolve(__dirname, '../../../client/dist'),
+  ];
 
+  const clientDistPath = candidatePaths.find((p) => fs.existsSync(path.join(p, 'index.html')));
+
+  if (!clientDistPath) {
+    console.error('❌ client/dist not found. Checked:', candidatePaths);
+  } else {
+    console.log('✅ Serving frontend from:', clientDistPath);
+
+    app.use(express.static(clientDistPath));
+
+    app.get(/^\/(?!api).*/, (_req, res) => {
+      res.sendFile(path.join(clientDistPath, 'index.html'));
+    });
+  }
+}
 // Error handling
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled error:', err);
