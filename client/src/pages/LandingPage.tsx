@@ -8,10 +8,10 @@ import { FileText, Zap, Download, ArrowRight, Sparkles, Shield, Clock, ChevronRi
 import { TEMPLATE_INFO } from '@/types';
 import type { TemplateType } from '@/types';
 import {  useNavigate } from 'react-router-dom';
- 
-const navigate = useNavigate();
 
 export default function LandingPage() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background dark">
       <Navbar />
