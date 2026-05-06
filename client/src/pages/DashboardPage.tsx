@@ -9,7 +9,7 @@ import { useAuthStore } from '@/stores/authStore';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { TEMPLATE_INFO, type DocumentItem } from '@/types';
-import { Plus, Download, Trash2, FileText, Loader2, FolderOpen, Clock, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
+import { Plus, Download, Trash2, Loader2, FolderOpen, Clock, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();

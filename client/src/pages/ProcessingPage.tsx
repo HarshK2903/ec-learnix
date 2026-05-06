@@ -140,7 +140,6 @@ export default function ProcessingPage() {
                   {STAGES.map((stage, i) => {
                     const isActive = stage.key === progress.stage;
                     const isDone = i < currentStageIdx || completed;
-                    const isPending = i > currentStageIdx && !completed;
 
                     return (
                       <div key={stage.key} className="flex items-center gap-4">

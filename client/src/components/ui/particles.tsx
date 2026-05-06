@@ -77,9 +77,11 @@ export const Particles: React.FC<ParticlesProps> = ({
   const mousePosition = useMousePosition();
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
-
+if (animationRef.current !== null) {
+  cancelAnimationFrame(animationRef.current);
+}
   useEffect(() => {
     if (canvasRef.current) {
       context.current = canvasRef.current.getContext("2d");

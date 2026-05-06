@@ -4,7 +4,9 @@ import { env } from './env.js';
 export const redis = new Redis({
   host: env.REDIS_HOST,
   port: env.REDIS_PORT,
-  maxRetriesPerRequest: null, // Required by BullMQ
+  password: env.REDIS_PASSWORD || undefined,
+  tls: env.REDIS_TLS ? {} : undefined,
+  maxRetriesPerRequest: null,
 });
 
 redis.on('connect', () => {

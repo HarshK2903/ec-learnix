@@ -86,10 +86,7 @@ export default function ResultPage() {
   const unchanged = doc.changeSummary?.filter(c => c.action === 'unchanged').length || 0;
   const total = doc.changeSummary?.length || 0;
 
-  const truncate = (text: string, max: number) => {
-    if (!text) return '(empty)';
-    return text.length > max ? text.substring(0, max) + '...' : text;
-  };
+  
 
   return (
     <div className="min-h-screen bg-background">

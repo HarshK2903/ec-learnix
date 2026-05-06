@@ -9,9 +9,15 @@ import { startWorker } from './workers/processing.worker.js';
 import { apiRateLimit } from './middleware/rateLimit.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import documentRoutes from './routes/document.routes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const server = http.createServer(app);
+
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(helmet());
@@ -28,6 +34,16 @@ app.use('/api/documents', documentRoutes);
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+if (env.NODE_ENV === 'production') {
+  // From server/dist -> ../../client/dist
+  const clientDistPath = path.resolve(__dirname, '../../client/dist');
+  app.use(express.static(clientDistPath));
+  // SPA fallback for non-API routes
+  app.get(/^\/(?!api).*/, (_req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // Error handling
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

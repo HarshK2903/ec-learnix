@@ -44,7 +44,7 @@ export default function Navbar() {
                 + New Document
               </Button>
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9">
                       <AvatarFallback className="bg-gradient-to-br from-violet-500 to-cyan-500 text-white text-sm font-semibold">
@@ -53,7 +53,7 @@ export default function Navbar() {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent className="w-56" align="end" >
                   <div className="flex items-center gap-2 p-2">
                     <div className="flex flex-col space-y-0.5">
                       <p className="text-sm font-medium">{user?.name}</p>
@@ -75,12 +75,16 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/login">Log in</Link>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
+                Log in
               </Button>
-              <Button size="sm" asChild className="bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600 text-white border-0">
-                <Link to="/signup">Sign up free</Link>
-              </Button>
+              <Button
+  size="sm"
+  onClick={() => navigate('/signup')}
+  className="bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600 text-white border-0"
+>
+  Sign up free
+</Button>
             </>
           )}
         </div>

@@ -7,6 +7,9 @@ import Navbar from '@/components/layout/Navbar';
 import { FileText, Zap, Download, ArrowRight, Sparkles, Shield, Clock, ChevronRight, Star } from 'lucide-react';
 import { TEMPLATE_INFO } from '@/types';
 import type { TemplateType } from '@/types';
+import {  useNavigate } from 'react-router-dom';
+ 
+const navigate = useNavigate();
 
 export default function LandingPage() {
   return (
@@ -69,13 +72,13 @@ export default function LandingPage() {
 
             {/* CTA Buttons */}
             <div className="animate-slide-up mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center" style={{ animationDelay: '0.3s' }}>
-              <Button size="lg" asChild className="group relative bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600 text-white border-0 px-10 h-14 text-base font-semibold shadow-2xl shadow-violet-500/25 transition-all hover:shadow-violet-500/40 hover:scale-[1.02]">
+              <Button size="lg"  className="group relative bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600 text-white border-0 px-10 h-14 text-base font-semibold shadow-2xl shadow-violet-500/25 transition-all hover:shadow-violet-500/40 hover:scale-[1.02]">
                 <Link to="/signup">
                   Get Started Free
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild className="h-14 px-10 text-base backdrop-blur-sm border-border/60 hover:bg-white/5">
+              <Button size="lg" variant="outline"  className="h-14 px-10 text-base backdrop-blur-sm border-border/60 hover:bg-white/5">
                 <Link to="/login">
                   Sign In
                 </Link>
@@ -267,11 +270,11 @@ export default function LandingPage() {
           <p className="text-lg text-muted-foreground mb-10 max-w-lg mx-auto">
             Join DocForge today and never worry about document formatting again. Start for free — no credit card required.
           </p>
-          <Button size="lg" asChild className="group bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600 text-white border-0 px-12 h-14 text-lg font-semibold shadow-2xl shadow-violet-500/25 hover:shadow-violet-500/40 transition-all hover:scale-[1.02]">
-            <Link to="/signup">
+          <Button size="lg" onClick={() => navigate('/signup')} className="group bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600 text-white border-0 px-12 h-14 text-lg font-semibold shadow-2xl shadow-violet-500/25 hover:shadow-violet-500/40 transition-all hover:scale-[1.02]">
+            
               Start Formatting Now
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </Link>
+            
           </Button>
         </div>
       </section>
