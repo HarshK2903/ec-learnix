@@ -266,4 +266,3 @@ export function startWorker(): Worker {
   console.log('🔧 BullMQ processing worker started');
   return worker;
 }
-

@@ -9,6 +9,7 @@ import { startWorker } from './workers/processing.worker.js';
 import { apiRateLimit } from './middleware/rateLimit.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import documentRoutes from './routes/document.routes.js';
+import projectRoutes from './routes/project.routes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -23,6 +24,7 @@ app.use(apiRateLimit);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/projects', projectRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

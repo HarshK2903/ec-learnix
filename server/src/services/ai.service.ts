@@ -158,4 +158,3 @@ async function callGroq(prompt: string): Promise<string> {
   });
   return response.choices[0]?.message?.content || '';
 }
-

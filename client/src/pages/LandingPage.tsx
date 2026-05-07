@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,10 +8,256 @@ import Navbar from '@/components/layout/Navbar';
 import { FileText, Zap, Download, ArrowRight, Sparkles, Shield, Clock, ChevronRight, Star } from 'lucide-react';
 import { TEMPLATE_INFO } from '@/types';
 import type { TemplateType } from '@/types';
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
+
+// Before/After document content for the showcase
+const BEFORE_CONTENT = {
+  title: 'my research paper',
+  lines: [
+    { text: 'introduction', style: 'font-bold text-sm' },
+    { text: 'this paper is about machine learning and how it works in todays world. we will discuss various methods.', style: 'text-xs text-muted-foreground' },
+    { text: '', style: '' },
+    { text: 'methods', style: 'font-bold text-sm' },
+    { text: 'we used neural networks and deep learning. the data was collected from internet. no references added yet.', style: 'text-xs text-muted-foreground' },
+    { text: '', style: '' },
+    { text: 'conclusion', style: 'font-bold text-sm' },
+    { text: 'machine learning is good and will be better in future.', style: 'text-xs text-muted-foreground' },
+    { text: '', style: '' },
+    { text: '(no summary, no tags, no author info)', style: 'text-xs text-red-400/60 italic' },
+  ],
+};
+
+const AFTER_CONTENT = {
+  title: 'Advances in Machine Learning: A Comprehensive Analysis',
+  lines: [
+    { text: '1. Introduction', style: 'font-bold text-sm text-violet-400' },
+    { text: 'This paper presents a comprehensive analysis of machine learning methodologies and their transformative impact on modern computational paradigms...', style: 'text-xs text-muted-foreground' },
+    { text: '', style: '' },
+    { text: '2. Methodology', style: 'font-bold text-sm text-violet-400' },
+    { text: 'We employed convolutional neural networks (CNNs) and recurrent architectures (LSTMs) trained on curated datasets sourced from peer-reviewed repositories...', style: 'text-xs text-muted-foreground' },
+    { text: '', style: '' },
+    { text: '3. Conclusion', style: 'font-bold text-sm text-violet-400' },
+    { text: 'Machine learning continues to evolve at an unprecedented pace, with implications spanning healthcare, finance, and autonomous systems...', style: 'text-xs text-muted-foreground' },
+    { text: '', style: '' },
+    { text: 'Summary · Tags · Author · References — ✓ AI Generated', style: 'text-xs text-emerald-400/80 italic' },
+  ],
+};
+
+function TransformShowcase() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const [showAfter, setShowAfter] = useState(false);
+
+  return (
+    <section ref={ref} className="relative py-28 overflow-hidden">
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-violet-500/5 blur-[120px]" />
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+        >
+          <Badge variant="outline" className="mb-4 text-xs uppercase tracking-wider">See The Magic</Badge>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">
+            Before & After <span className="gradient-text">AI Enhancement</span>
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground max-w-xl mx-auto">
+            Watch how DocForge transforms a rough draft into a polished, publication-ready document
+          </p>
+        </motion.div>
+
+        {/* Toggle button */}
+        <motion.div
+          className="flex justify-center mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <div className="inline-flex items-center rounded-full border border-border/40 bg-card/50 backdrop-blur-sm p-1">
+            <button
+              onClick={() => setShowAfter(false)}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                !showAfter ? 'bg-red-500/15 text-red-400 shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              📄 Before
+            </button>
+            <button
+              onClick={() => setShowAfter(true)}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                showAfter ? 'bg-emerald-500/15 text-emerald-400 shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              ✨ After AI
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Document cards */}
+        <motion.div
+          className="max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 40 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, delay: 0.3 }}
+        >
+          <div className="relative">
+            {/* Before card */}
+            <motion.div
+              className="w-full"
+              animate={{
+                opacity: showAfter ? 0 : 1,
+                scale: showAfter ? 0.95 : 1,
+                x: showAfter ? -30 : 0,
+              }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              style={{ display: showAfter ? 'none' : 'block' }}
+            >
+              <Card className="border-red-500/20 bg-card/60 backdrop-blur-sm overflow-hidden">
+                {/* Document header bar */}
+                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/40 bg-red-500/5">
+                  <div className="flex gap-1.5">
+                    <div className="h-3 w-3 rounded-full bg-red-500/40" />
+                    <div className="h-3 w-3 rounded-full bg-amber-500/40" />
+                    <div className="h-3 w-3 rounded-full bg-emerald-500/40" />
+                  </div>
+                  <span className="text-xs text-muted-foreground ml-2">raw_draft.docx</span>
+                  <Badge variant="outline" className="ml-auto text-[10px] text-red-400 border-red-500/30">Unformatted</Badge>
+                </div>
+                <CardContent className="p-8">
+                  <h3 className="text-lg font-medium mb-4 text-muted-foreground/80">{BEFORE_CONTENT.title}</h3>
+                  <div className="space-y-2">
+                    {BEFORE_CONTENT.lines.map((line, i) => (
+                      <motion.p
+                        key={i}
+                        className={line.style}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={isInView ? { opacity: 1, x: 0 } : {}}
+                        transition={{ delay: 0.4 + i * 0.05 }}
+                      >
+                        {line.text || '\u00A0'}
+                      </motion.p>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* After card */}
+            <motion.div
+              className="w-full"
+              animate={{
+                opacity: showAfter ? 1 : 0,
+                scale: showAfter ? 1 : 0.95,
+                x: showAfter ? 0 : 30,
+              }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              style={{ display: showAfter ? 'block' : 'none' }}
+            >
+              <Card className="border-emerald-500/20 bg-card/60 backdrop-blur-sm overflow-hidden">
+                {/* Document header bar */}
+                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/40 bg-emerald-500/5">
+                  <div className="flex gap-1.5">
+                    <div className="h-3 w-3 rounded-full bg-red-500/40" />
+                    <div className="h-3 w-3 rounded-full bg-amber-500/40" />
+                    <div className="h-3 w-3 rounded-full bg-emerald-500/40" />
+                  </div>
+                  <span className="text-xs text-muted-foreground ml-2">research_paper_formatted.docx</span>
+                  <Badge variant="outline" className="ml-auto text-[10px] text-emerald-400 border-emerald-500/30 gap-1">
+                    <Sparkles className="h-2.5 w-2.5" />
+                    AI Enhanced
+                  </Badge>
+                </div>
+                <CardContent className="p-8">
+                  <h3 className="text-lg font-semibold mb-4">{AFTER_CONTENT.title}</h3>
+                  <div className="space-y-2">
+                    {AFTER_CONTENT.lines.map((line, i) => (
+                      <motion.p
+                        key={i}
+                        className={line.style}
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={showAfter ? { opacity: 1, x: 0 } : {}}
+                        transition={{ delay: 0.1 + i * 0.06 }}
+                      >
+                        {line.text || '\u00A0'}
+                      </motion.p>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Floating enhancement badges */}
+            {showAfter && (
+              <>
+                <motion.div
+                  className="absolute -right-4 top-20 hidden lg:block"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <div className="flex items-center gap-2 rounded-full bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 text-xs text-violet-400 backdrop-blur-sm">
+                    <Sparkles className="h-3 w-3" />
+                    Title Enhanced
+                  </div>
+                </motion.div>
+                <motion.div
+                  className="absolute -left-4 top-48 hidden lg:block"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <div className="flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 text-xs text-blue-400 backdrop-blur-sm">
+                    <Sparkles className="h-3 w-3" />
+                    Grammar Fixed
+                  </div>
+                </motion.div>
+                <motion.div
+                  className="absolute -right-4 bottom-24 hidden lg:block"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.9 }}
+                >
+                  <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-xs text-emerald-400 backdrop-blur-sm">
+                    <Sparkles className="h-3 w-3" />
+                    Sections Generated
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </div>
+
+          {/* Enhancement stats */}
+          <motion.div
+            className="grid grid-cols-3 gap-4 mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            {[
+              { label: 'Fields Enhanced', value: '5', color: 'text-amber-400' },
+              { label: 'Sections Generated', value: '3', color: 'text-blue-400' },
+              { label: 'Quality Score', value: '94%', color: 'text-emerald-400' },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center p-4 rounded-xl border border-border/20 bg-card/20 backdrop-blur-sm">
+                <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background dark">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
       {/* ===== HERO SECTION ===== */}
@@ -44,31 +291,46 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 w-full">
           <div className="mx-auto max-w-4xl text-center">
             {/* Floating badge */}
-            <div className="animate-slide-up mb-8">
+            <motion.div className="mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <Badge variant="secondary" className="px-5 py-2 text-sm font-medium border border-violet-500/20 bg-violet-500/10 text-violet-300 backdrop-blur-sm">
                 <Sparkles className="mr-2 h-3.5 w-3.5 text-violet-400" />
                 AI-Powered Document Formatting
                 <ChevronRight className="ml-2 h-3.5 w-3.5" />
               </Badge>
-            </div>
+            </motion.div>
 
             {/* Hero title */}
-            <h1 className="animate-slide-up text-5xl font-extrabold tracking-tight sm:text-7xl lg:text-8xl leading-[0.9]" style={{ animationDelay: '0.1s' }}>
+            <motion.h1
+              className="text-5xl font-extrabold tracking-tight sm:text-7xl lg:text-8xl leading-[0.9]"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1 }}
+            >
               Transform Your{' '}
               <span className="gradient-text">Documents</span>
               <br />
               <span className="text-muted-foreground/80 text-[0.65em]">with AI</span>
-            </h1>
+            </motion.h1>
 
             {/* Subtitle */}
-            <p className="animate-slide-up mt-8 text-lg leading-relaxed text-muted-foreground sm:text-xl max-w-2xl mx-auto" style={{ animationDelay: '0.2s' }}>
+            <motion.p
+              className="mt-8 text-lg leading-relaxed text-muted-foreground sm:text-xl max-w-2xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
               Upload your raw DOCX manuscript and get a professionally formatted,
               publication-ready document in seconds.
               <span className="text-foreground/80 font-medium"> No manual formatting required.</span>
-            </p>
+            </motion.p>
 
             {/* CTA Buttons */}
-            <div className="animate-slide-up mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center" style={{ animationDelay: '0.3s' }}>
+            <motion.div
+              className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
               <Button size="lg" asChild className="group relative bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600 text-white border-0 px-10 h-14 text-base font-semibold shadow-2xl shadow-violet-500/25 transition-all hover:shadow-violet-500/40 hover:scale-[1.02]">
                 <Link to="/signup">
                   Get Started Free
@@ -80,10 +342,15 @@ export default function LandingPage() {
                   Sign In
                 </Link>
               </Button>
-            </div>
+            </motion.div>
 
             {/* Trust indicators */}
-            <div className="animate-slide-up mt-12 flex items-center justify-center gap-6 text-sm text-muted-foreground" style={{ animationDelay: '0.4s' }}>
+            <motion.div
+              className="mt-12 flex items-center justify-center gap-6 text-sm text-muted-foreground"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
               <span className="flex items-center gap-1.5">
                 <Shield className="h-4 w-4 text-emerald-400" />
                 Secure & Private
@@ -98,13 +365,16 @@ export default function LandingPage() {
                 <Star className="h-4 w-4 text-violet-400" />
                 Free to use
               </span>
-            </div>
+            </motion.div>
           </div>
         </div>
 
         {/* Bottom fade */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
       </section>
+
+      {/* ===== TRANSFORMATION SHOWCASE ===== */}
+      <TransformShowcase />
 
       {/* ===== HOW IT WORKS ===== */}
       <section className="relative py-28 overflow-hidden">
@@ -295,4 +565,3 @@ export default function LandingPage() {
     </div>
   );
 }
-

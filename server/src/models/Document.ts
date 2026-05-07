@@ -117,4 +117,3 @@ const documentSchema = new Schema<IDocument>(
 documentSchema.index({ userId: 1, createdAt: -1 });
 
 export const DocumentModel = mongoose.model<IDocument>('Document', documentSchema);
-

@@ -19,7 +19,7 @@ export default function ResultPage() {
   const [doc, setDoc] = useState<DocumentItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
-  const [expandedField, setExpandedField] = useState<number | null>(null);
+  const [collapsedFields, setCollapsedFields] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!id) return;
@@ -60,7 +60,6 @@ export default function ResultPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
         <div className="flex items-center justify-center py-32">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -71,7 +70,6 @@ export default function ResultPage() {
   if (!doc) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
         <div className="flex flex-col items-center justify-center py-32">
           <p className="text-xl font-semibold mb-4">Document not found</p>
           <Button variant="outline" onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
@@ -93,7 +91,6 @@ export default function ResultPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       {/* Background decoration */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
@@ -201,20 +198,24 @@ export default function ResultPage() {
             <div className="flex items-center gap-2 mb-6">
               <FileText className="h-5 w-5 text-violet-500" />
               <h2 className="text-xl font-bold">Detailed Changes</h2>
-              <span className="text-sm text-muted-foreground ml-2">Click any field to see before → after</span>
+              <span className="text-sm text-muted-foreground ml-2">Click any field to collapse/expand</span>
             </div>
 
             <div className="space-y-4">
               {doc.changeSummary.map((change: ChangeSummary, i: number) => {
                 const config = actionConfig[change.action];
-                const isExpanded = expandedField === i;
+                const isExpanded = !collapsedFields.has(i);
                 const hasContent = change.originalContent || change.newContent;
 
                 return (
                   <Card
                     key={i}
                     className={`border overflow-hidden transition-all duration-300 ${config.borderColor} ${config.bgColor} ${hasContent ? 'cursor-pointer hover:shadow-lg' : ''}`}
-                    onClick={() => hasContent && setExpandedField(isExpanded ? null : i)}
+                    onClick={() => hasContent && setCollapsedFields(prev => {
+                      const next = new Set(prev);
+                      if (isExpanded) next.add(i); else next.delete(i);
+                      return next;
+                    })}
                   >
                     {/* Field Header */}
                     <div className="flex items-center gap-3 p-4">
@@ -295,4 +296,3 @@ export default function ResultPage() {
     </div>
   );
 }
-

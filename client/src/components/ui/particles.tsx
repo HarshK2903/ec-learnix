@@ -292,4 +292,3 @@ export const Particles: React.FC<ParticlesProps> = ({
 };
 
 Particles.displayName = "Particles";
-

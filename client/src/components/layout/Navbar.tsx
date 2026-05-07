@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { FileText, LogOut, LayoutDashboard } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -33,6 +34,7 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle compact />
           {isAuthenticated ? (
             <>
               <Button

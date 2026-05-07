@@ -249,4 +249,3 @@ export const deleteDocument = async (
     res.status(500).json({ message: 'Failed to delete document' });
   }
 };
-

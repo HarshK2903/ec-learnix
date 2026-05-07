@@ -41,4 +41,3 @@ export const useUploadStore = create<UploadState>()((set) => ({
       step: 0,
     }),
 }));
-
