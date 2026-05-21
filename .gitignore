@@ -1,3 +1,30 @@
-.env
+# Dependencies
 node_modules/
-.env.example
+
+# Environment
+.env
+.env.local
+
+# Build output
+server/dist/
+client/dist/
+
+# Uploads & outputs (runtime data)
+server/uploads/
+server/outputs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test files
+server/test_*.docx
+server/generate_test_files.ts

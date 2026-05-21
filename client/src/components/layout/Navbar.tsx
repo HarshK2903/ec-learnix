@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { FileText, LogOut, LayoutDashboard } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -33,6 +34,7 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle compact />
           {isAuthenticated ? (
             <>
               <Button
@@ -53,7 +55,7 @@ export default function Navbar() {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" >
+                <DropdownMenuContent className="w-56" align="end">
                   <div className="flex items-center gap-2 p-2">
                     <div className="flex flex-col space-y-0.5">
                       <p className="text-sm font-medium">{user?.name}</p>
@@ -75,16 +77,12 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
-                Log in
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">Log in</Link>
               </Button>
-              <Button
-  size="sm"
-  onClick={() => navigate('/signup')}
-  className="bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600 text-white border-0"
->
-  Sign up free
-</Button>
+              <Button size="sm" asChild className="bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600 text-white border-0">
+                <Link to="/signup">Sign up free</Link>
+              </Button>
             </>
           )}
         </div>

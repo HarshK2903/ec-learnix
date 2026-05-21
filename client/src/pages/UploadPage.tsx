@@ -76,7 +76,6 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -327,4 +326,3 @@ export default function UploadPage() {
     </div>
   );
 }
-

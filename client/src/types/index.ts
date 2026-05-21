@@ -37,6 +37,17 @@ export interface DocumentItem {
   processingCompletedAt?: string;
 }
 
+export interface ProjectItem {
+  _id: string;
+  title: string;
+  content?: string;
+  templateType?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ProgressEvent {
   stage: string;
   progress: number;
@@ -65,4 +76,3 @@ export const PROCESSING_MODE_INFO: Record<ProcessingMode, { label: string; icon:
   fill_missing: { label: 'Fill Missing Only', icon: '📝', description: 'Generate content only for missing sections — leave existing content untouched' },
   both: { label: 'Enhance + Fill Missing', icon: '🚀', description: 'Enhance existing content AND generate any missing sections (recommended)' },
 };
-

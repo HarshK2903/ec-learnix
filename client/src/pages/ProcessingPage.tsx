@@ -82,7 +82,6 @@ export default function ProcessingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center mb-10 animate-fade-in">
           {error ? (
@@ -140,6 +139,7 @@ export default function ProcessingPage() {
                   {STAGES.map((stage, i) => {
                     const isActive = stage.key === progress.stage;
                     const isDone = i < currentStageIdx || completed;
+                    const isPending = i > currentStageIdx && !completed;
 
                     return (
                       <div key={stage.key} className="flex items-center gap-4">

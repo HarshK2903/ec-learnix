@@ -7,7 +7,9 @@ let io: SocketServer | null = null;
 export function initSocket(httpServer: HTTPServer): SocketServer {
   io = new SocketServer(httpServer, {
     cors: {
-      origin: env.CLIENT_URL,
+      origin: env.NODE_ENV === 'production'
+        ? [env.CLIENT_URL, /\.onrender\.com$/]
+        : env.CLIENT_URL,
       methods: ['GET', 'POST'],
     },
   });

@@ -45,4 +45,3 @@ export function getGroqClient(): OpenAI {
 export function getAIProvider(): 'gemini' | 'openai' | 'groq' {
   return env.AI_PROVIDER;
 }
-

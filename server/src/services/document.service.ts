@@ -641,4 +641,3 @@ export async function convertDocxToPdf(
   });
   await browser.close();
 }
-

@@ -2,10 +2,9 @@ export declare const env: {
     PORT: number;
     NODE_ENV: string;
     MONGODB_URI: string;
+    REDIS_URL: string;
     REDIS_HOST: string;
     REDIS_PORT: number;
-    REDIS_PASSWORD: string;
-    REDIS_TLS: boolean;
     JWT_ACCESS_SECRET: string;
     JWT_REFRESH_SECRET: string;
     JWT_ACCESS_EXPIRY: string;
