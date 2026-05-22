@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq';
-import { redisWorker } from '../config/redis.js';
+import { attachBullMQErrorHandlers, getBullMQConnection } from '../config/redis.js';
 import { DocumentModel } from '../models/Document.js';
 import { extractTextFromDocx, buildFormattedDocx, convertDocxToPdf } from '../services/document.service.js';
 import { analyzeFields, buildPrompt } from '../services/template.service.js';
@@ -204,13 +204,14 @@ async function processDocument(job) {
 }
 export function startWorker() {
     const worker = new Worker('document-processing', processDocument, {
-        connection: redisWorker,
+        connection: getBullMQConnection(),
         concurrency: 1, // Process one at a time to avoid rate limits
         limiter: {
             max: 3,
             duration: 60000,
         },
     });
+    attachBullMQErrorHandlers(worker, 'worker');
     worker.on('completed', (job) => {
         console.log(`✅ Job ${job.id} completed`);
     });

@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { env } from './config/env.js';
 import { connectDB } from './config/db.js';
+import { assertRedisReachable } from './config/redis.js';
 import { initSocket } from './socket/index.js';
 import { startWorker } from './workers/processing.worker.js';
 import { apiRateLimit } from './middleware/rateLimit.middleware.js';
@@ -65,6 +66,7 @@ app.use((err, _req, res, _next) => {
 // Start server
 async function start() {
     await connectDB();
+    await assertRedisReachable();
     initSocket(server);
     startWorker();
     server.listen(env.PORT, () => {

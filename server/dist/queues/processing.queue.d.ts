@@ -1,3 +1,3 @@
 import { Queue } from 'bullmq';
-export declare const processingQueue: Queue<any, any, string, any, any, string>;
+export declare function getProcessingQueue(): Queue;
 //# sourceMappingURL=processing.queue.d.ts.map
