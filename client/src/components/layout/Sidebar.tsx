@@ -8,7 +8,7 @@ import api from '@/lib/api';
 import type { ProjectItem } from '@/types';
 import {
   Home, Search, Plus, Trash2, FileText, LogOut, FolderOpen,
-  ChevronLeft, ChevronRight, Download
+  ChevronLeft, ChevronRight, Download, Trophy
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -85,6 +85,9 @@ export default function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
         <button onClick={handleNewProject} className="p-2.5 rounded-lg text-muted-foreground hover:bg-muted/50">
           <Plus className="h-5 w-5" />
         </button>
+        <button onClick={() => navigate('/leaderboard')} className={`p-2.5 rounded-lg ${isActive('/leaderboard') ? 'bg-amber-500/15 text-amber-400' : 'text-muted-foreground hover:bg-muted/50'}`} title="Leaderboard">
+          <Trophy className="h-5 w-5" />
+        </button>
         <button onClick={() => navigate('/trash')} className={`p-2.5 rounded-lg ${isActive('/trash') ? 'bg-violet-500/15 text-violet-400' : 'text-muted-foreground hover:bg-muted/50'}`}>
           <Trash2 className="h-5 w-5" />
         </button>
@@ -119,6 +122,13 @@ export default function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
         <div className={navItemClass(isActive('/dashboard'))} onClick={() => navigate('/dashboard')}>
           <Home className="h-4 w-4" />
           Home
+        </div>
+        <div
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${isActive('/leaderboard') ? 'bg-amber-500/15 text-amber-400' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+          onClick={() => navigate('/leaderboard')}
+        >
+          <Trophy className="h-4 w-4" />
+          Leaderboard
         </div>
         <div
           className={navItemClass(false)}

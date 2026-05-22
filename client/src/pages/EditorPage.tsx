@@ -16,7 +16,7 @@ export default function EditorPage() {
   const [title, setTitle] = useState('Untitled Project');
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const titleRef = useRef(title);
 
   // Keep titleRef in sync with title state

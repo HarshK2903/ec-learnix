@@ -16,10 +16,10 @@ import {
 
 // Quick start template cards
 const QUICK_TEMPLATES = [
-  { key: 'journal', color: 'from-violet-500 to-violet-600', icon: '📝' },
-  { key: 'cv', color: 'from-cyan-500 to-cyan-600', icon: '📄' },
-  { key: 'blogpost', color: 'from-amber-500 to-orange-600', icon: '✍️' },
-  { key: 'report', color: 'from-emerald-500 to-emerald-600', icon: '📊' },
+  { key: 'journal', color: 'from-violet-500 to-violet-600', icon: '📝', label: '', description: '' },
+  { key: 'cv', color: 'from-cyan-500 to-cyan-600', icon: '📄', label: '', description: '' },
+  { key: 'blogpost', color: 'from-amber-500 to-orange-600', icon: '✍️', label: '', description: '' },
+  { key: 'report', color: 'from-emerald-500 to-emerald-600', icon: '📊', label: '', description: '' },
   { key: 'blank', color: 'from-gray-500 to-gray-600', icon: '📃', label: 'Blank Project', description: 'Start with a blank canvas' },
 ] as const;
 

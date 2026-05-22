@@ -261,16 +261,16 @@ export default function LandingPage() {
       <Navbar />
 
       {/* ===== HERO SECTION ===== */}
-      <section className="relative overflow-hidden min-h-[90vh] flex items-center">
+     <section className="relative overflow-hidden min-h-[90vh] flex items-center isolate">
         {/* Particles Background */}
         <Particles
-          className="absolute inset-0 -z-10"
-          quantity={120}
-          staticity={30}
-          ease={70}
-          size={1}
-          color="#8b5cf6"
-        />
+            className="-z-10"
+  quantity={120}
+  staticity={30}
+  ease={70}
+  size={1}
+  color="#8b5cf6"
+/>
 
         {/* Gradient overlays */}
         <div className="absolute inset-0 -z-10">
