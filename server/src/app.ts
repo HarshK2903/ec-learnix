@@ -12,6 +12,7 @@ import { apiRateLimit } from './middleware/rateLimit.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import documentRoutes from './routes/document.routes.js';
 import projectRoutes from './routes/project.routes.js';
+import leaderboardRoutes from './routes/leaderboard.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,6 +39,7 @@ app.use(apiRateLimit);
 app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

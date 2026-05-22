@@ -13,6 +13,7 @@ import ProcessingPage from '@/pages/ProcessingPage';
 import ResultPage from '@/pages/ResultPage';
 import EditorPage from '@/pages/EditorPage';
 import TrashPage from '@/pages/TrashPage';
+import LeaderboardPage from '@/pages/LeaderboardPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="/processing/:id" element={<WorkspaceRoute><ProcessingPage /></WorkspaceRoute>} />
             <Route path="/result/:id" element={<WorkspaceRoute><ResultPage /></WorkspaceRoute>} />
             <Route path="/editor/:id" element={<WorkspaceRoute><EditorPage /></WorkspaceRoute>} />
+            <Route path="/leaderboard" element={<WorkspaceRoute><LeaderboardPage /></WorkspaceRoute>} />
             <Route path="/trash" element={<WorkspaceRoute><TrashPage /></WorkspaceRoute>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
