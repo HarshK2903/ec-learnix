@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import Navbar from '@/components/layout/Navbar';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { TEMPLATE_INFO, type DocumentItem, type ChangeSummary } from '@/types';
@@ -83,11 +82,6 @@ export default function ResultPage() {
   const enhanced = doc.changeSummary?.filter(c => c.action === 'enhanced').length || 0;
   const unchanged = doc.changeSummary?.filter(c => c.action === 'unchanged').length || 0;
   const total = doc.changeSummary?.length || 0;
-
-  const truncate = (text: string, max: number) => {
-    if (!text) return '(empty)';
-    return text.length > max ? text.substring(0, max) + '...' : text;
-  };
 
   return (
     <div className="min-h-screen bg-background">

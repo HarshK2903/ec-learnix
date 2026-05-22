@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import api from '@/lib/api';
@@ -8,7 +7,6 @@ import type { ProjectItem } from '@/types';
 import { Trash2, RotateCcw, Loader2, FolderOpen, AlertTriangle } from 'lucide-react';
 
 export default function TrashPage() {
-  const navigate = useNavigate();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
