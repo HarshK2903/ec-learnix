@@ -1,28 +1,73 @@
-import Redis from 'ioredis';
+import Redis, { type RedisOptions } from 'ioredis';
 import { env } from './env.js';
 
-// Support REDIS_URL (for managed Redis like Render/Upstash) or fallback to host/port
-const redisOptions = env.REDIS_URL
-  ? {
-      maxRetriesPerRequest: null,
-      tls: env.REDIS_URL.startsWith('rediss://') ? { rejectUnauthorized: false } : undefined,
+const TRANSIENT_ERROR_CODES = new Set(['ECONNRESET', 'ETIMEDOUT', 'EPIPE', 'ECONNREFUSED']);
+
+function buildRedisOptions(): RedisOptions {
+  const useTls = Boolean(env.REDIS_URL?.startsWith('rediss://'));
+
+  return {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+    enableOfflineQueue: true,
+    connectTimeout: 20_000,
+    keepAlive: 30_000,
+    retryStrategy: (times) => {
+      if (times > 30) return null;
+      return Math.min(times * 200, 5_000);
+    },
+    reconnectOnError: (err) => {
+      const code = (err as NodeJS.ErrnoException).code;
+      return code !== undefined && TRANSIENT_ERROR_CODES.has(code);
+    },
+    ...(useTls ? { tls: { rejectUnauthorized: false } } : {}),
+    ...(!env.REDIS_URL
+      ? {
+          host: env.REDIS_HOST,
+          port: env.REDIS_PORT,
+        }
+      : {}),
+  };
+}
+
+function attachRedisListeners(client: Redis, label: string): void {
+  let hasLoggedReady = false;
+
+  client.on('ready', () => {
+    if (!hasLoggedReady) {
+      console.log(`✅ Redis [${label}] ready`);
+      hasLoggedReady = true;
     }
-  : {
-      host: env.REDIS_HOST,
-      port: env.REDIS_PORT,
-      maxRetriesPerRequest: null,
-    };
+  });
 
-export const redis = env.REDIS_URL
-  ? new Redis(env.REDIS_URL, redisOptions)
-  : new Redis(redisOptions);
+  client.on('reconnecting', () => {
+    console.warn(`Redis [${label}]: reconnecting…`);
+  });
 
-redis.on('connect', () => {
-  console.log('✅ Redis connected successfully');
-});
+  client.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code && TRANSIENT_ERROR_CODES.has(err.code)) {
+      console.warn(`Redis [${label}]: ${err.code} (will retry)`);
+      return;
+    }
+    console.error(`Redis [${label}]:`, err.message);
+  });
+}
 
-redis.on('error', (err) => {
-  console.error('❌ Redis connection error:', err.message);
-});
+/** BullMQ needs separate connections for Queue (commands) and Worker (blocking). */
+export function createRedisConnection(label: string): Redis {
+  const options = buildRedisOptions();
+  const client = env.REDIS_URL
+    ? new Redis(env.REDIS_URL, options)
+    : new Redis(options);
 
-export default redis;
+  attachRedisListeners(client, label);
+  return client;
+}
+
+export const redisQueue = createRedisConnection('queue');
+export const redisWorker = createRedisConnection('worker');
+
+/** @deprecated Use redisQueue or redisWorker — kept for any legacy imports */
+export const redis = redisQueue;
+
+export default redisQueue;

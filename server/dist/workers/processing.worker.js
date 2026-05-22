@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq';
-import { redis } from '../config/redis.js';
+import { redisWorker } from '../config/redis.js';
 import { DocumentModel } from '../models/Document.js';
 import { extractTextFromDocx, buildFormattedDocx, convertDocxToPdf } from '../services/document.service.js';
 import { analyzeFields, buildPrompt } from '../services/template.service.js';
@@ -204,7 +204,7 @@ async function processDocument(job) {
 }
 export function startWorker() {
     const worker = new Worker('document-processing', processDocument, {
-        connection: redis,
+        connection: redisWorker,
         concurrency: 1, // Process one at a time to avoid rate limits
         limiter: {
             max: 3,
