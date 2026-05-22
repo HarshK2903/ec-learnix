@@ -2,11 +2,13 @@ services:
   - type: web
     name: docforge
     runtime: node
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev --workspaces && npm run build --workspace=client && npm run build --workspace=server
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PUPPETEER_SKIP_DOWNLOAD
+        value: "true"
       - key: MONGODB_URI
         sync: false
       - key: REDIS_URL
