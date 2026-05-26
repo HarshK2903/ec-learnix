@@ -247,7 +247,7 @@ async function processDocument(job: Job<ProcessingJobData>): Promise<void> {
 
 export function startWorker(): Worker {
   const worker = new Worker('document-processing', processDocument, {
-    connection: createRedisConnection(),
+    connection: createRedisConnection('worker'),
     concurrency: 1, // Process one at a time to avoid rate limits
     limiter: {
       max: 3,

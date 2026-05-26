@@ -22,12 +22,18 @@ if (env.REDIS_URL && env.REDIS_URL.startsWith('rediss://')) {
   baseOptions.tls = { rejectUnauthorized: false };
 }
 
+let connectionCount = 0;
+
 /**
  * Create a new Redis connection instance.
  * BullMQ requires SEPARATE connections for Queue and Worker
  * because Workers use blocking Redis commands (BRPOPLPUSH).
  */
-export function createRedisConnection(): Redis {
+export function createRedisConnection(label?: string): Redis {
+  const id = ++connectionCount;
+  const tag = label || `conn-${id}`;
+  let hasConnected = false;
+
   const conn = env.REDIS_URL
     ? new Redis(env.REDIS_URL, baseOptions)
     : new Redis({
@@ -37,17 +43,23 @@ export function createRedisConnection(): Redis {
       });
 
   conn.on('connect', () => {
-    console.log('✅ Redis connected successfully');
+    if (!hasConnected) {
+      console.log(`✅ Redis [${tag}] connected successfully`);
+      hasConnected = true;
+    }
   });
 
   conn.on('error', (err) => {
-    console.error('❌ Redis connection error:', err.message);
+    // Only log non-ECONNRESET errors (reconnect handles ECONNRESET silently)
+    if (!err.message.includes('ECONNRESET')) {
+      console.error(`❌ Redis [${tag}] error:`, err.message);
+    }
   });
 
   return conn;
 }
 
 // Default shared connection (for non-BullMQ use, e.g. caching)
-export const redis = createRedisConnection();
+export const redis = createRedisConnection('default');
 
 export default redis;

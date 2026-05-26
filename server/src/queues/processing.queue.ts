@@ -2,7 +2,7 @@ import { Queue } from 'bullmq';
 import { createRedisConnection } from '../config/redis.js';
 
 export const processingQueue = new Queue('document-processing', {
-  connection: createRedisConnection(),
+  connection: createRedisConnection('queue'),
   defaultJobOptions: {
     removeOnComplete: { count: 100 },
     removeOnFail: { count: 50 },
