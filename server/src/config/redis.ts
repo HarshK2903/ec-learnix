@@ -8,13 +8,16 @@ import { env } from './env.js';
  *   2. Individual vars: REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_TLS
  */
 function buildRedisOptions(): { url?: string; opts: RedisOptions } {
+  // BullMQ REQUIRES these two settings:
+  //   maxRetriesPerRequest: null  — so workers don't throw on transient failures
+  //   enableReadyCheck: false     — so ioredis doesn't block on INFO command
   const common: RedisOptions = {
-    maxRetriesPerRequest: null, // Required by BullMQ
-    enableReadyCheck: true,
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
     keepAlive: 10000,
     connectTimeout: 15000,
     retryStrategy(times: number) {
-      if (times > 30) return null; // Give up after 30 retries
+      if (times > 30) return null;
       return Math.min(times * 500, 10000);
     },
   };
@@ -53,7 +56,9 @@ if (redisConfig.url) {
   const masked = redisConfig.url.replace(/:\/\/[^@]+@/, '://***:***@');
   console.log(`🔗 Redis: ${masked}`);
 } else {
-  console.log(`🔗 Redis: ${env.REDIS_HOST}:${env.REDIS_PORT} (TLS: ${env.REDIS_TLS})`);
+  const hasPw = !!redisConfig.opts.password;
+  const hasTLS = !!redisConfig.opts.tls;
+  console.log(`🔗 Redis: ${redisConfig.opts.host}:${redisConfig.opts.port} (password: ${hasPw}, TLS: ${hasTLS})`);
 }
 
 /**
@@ -72,7 +77,7 @@ export function createRedisConnection(label?: string): Redis {
   });
 
   conn.on('error', (err) => {
-    if (err.message.includes('ECONNRESET')) return; // Handled by auto-reconnect
+    if (err.message.includes('ECONNRESET')) return;
     console.error(`❌ Redis [${tag}] error:`, err.message);
   });
 
