@@ -107,6 +107,25 @@ async function start() {
   });
 }
 
+// Catch uncaught ECONNRESET errors from internal ioredis/BullMQ subscriber connections
+// These don't go through our Redis error handler but are auto-recovered by ioredis reconnect
+process.on('uncaughtException', (err) => {
+  if (err.message?.includes('ECONNRESET') || err.message?.includes('ECONNREFUSED')) {
+    // Silently ignore — ioredis reconnect handles these automatically
+    return;
+  }
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  const msg = reason instanceof Error ? reason.message : String(reason);
+  if (msg.includes('ECONNRESET') || msg.includes('ECONNREFUSED')) {
+    return;
+  }
+  console.error('Unhandled Rejection:', reason);
+});
+
 start().catch((err) => {
   console.error('Failed to start server:', err);
 });

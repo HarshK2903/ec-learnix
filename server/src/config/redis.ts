@@ -1,25 +1,38 @@
 import Redis from 'ioredis';
 import { env } from './env.js';
 
-// Base Redis options with connection resilience settings
+const isUpstash = env.REDIS_URL?.includes('upstash.io');
+const isTLS = env.REDIS_URL?.startsWith('rediss://');
+
+// Base Redis options optimized for Upstash + BullMQ
 const baseOptions: Record<string, unknown> = {
   maxRetriesPerRequest: null, // Required by BullMQ
   enableReadyCheck: false,
-  keepAlive: 30000, // Send TCP keepalive every 30s to prevent idle disconnects
-  connectTimeout: 10000,
+  family: 4, // Force IPv4 (Upstash works better with IPv4)
+  keepAlive: 10000, // Aggressive keepalive to prevent Upstash idle drops
+  connectTimeout: 15000,
+  // Upstash-specific: prevent command timeout during reconnection
+  enableOfflineQueue: true,
   retryStrategy(times: number) {
-    // Exponential backoff: 50ms, 100ms, 200ms... capped at 2s
-    return Math.min(times * 50, 2000);
+    if (times > 20) {
+      console.error('❌ Redis: Max reconnection attempts reached');
+      return null; // Stop retrying
+    }
+    // Exponential backoff: 200ms, 400ms, 800ms... capped at 5s
+    return Math.min(times * 200, 5000);
   },
   reconnectOnError(err: Error) {
-    // Reconnect on connection reset errors
     return err.message.includes('ECONNRESET') || err.message.includes('READONLY');
   },
 };
 
-// Add TLS if using rediss:// URL
-if (env.REDIS_URL && env.REDIS_URL.startsWith('rediss://')) {
-  baseOptions.tls = { rejectUnauthorized: false };
+// TLS config for Upstash (rediss:// URLs)
+if (isTLS) {
+  baseOptions.tls = {
+    rejectUnauthorized: false,
+    // Upstash requires SNI for TLS
+    ...(isUpstash ? { servername: new URL(env.REDIS_URL).hostname } : {}),
+  };
 }
 
 let connectionCount = 0;
@@ -44,22 +57,25 @@ export function createRedisConnection(label?: string): Redis {
 
   conn.on('connect', () => {
     if (!hasConnected) {
-      console.log(`✅ Redis [${tag}] connected successfully`);
+      console.log(`✅ Redis [${tag}] connected`);
       hasConnected = true;
     }
   });
 
   conn.on('error', (err) => {
-    // Only log non-ECONNRESET errors (reconnect handles ECONNRESET silently)
-    if (!err.message.includes('ECONNRESET')) {
-      console.error(`❌ Redis [${tag}] error:`, err.message);
-    }
+    // Silently handle ECONNRESET (auto-recovered by reconnect strategy)
+    if (err.message.includes('ECONNRESET')) return;
+    console.error(`❌ Redis [${tag}] error:`, err.message);
+  });
+
+  conn.on('close', () => {
+    hasConnected = false; // Allow re-logging on next successful connect
   });
 
   return conn;
 }
 
-// Default shared connection (for non-BullMQ use, e.g. caching)
+// Default shared connection (for non-BullMQ use)
 export const redis = createRedisConnection('default');
 
 export default redis;
