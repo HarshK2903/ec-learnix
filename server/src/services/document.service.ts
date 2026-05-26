@@ -629,8 +629,32 @@ export async function convertDocxToPdf(
     </html>
   `;
 
-  const puppeteer = await import('puppeteer');
-  const browser = await puppeteer.default.launch({ headless: true, args: ['--no-sandbox'] });
+  const puppeteer = await import('puppeteer-core');
+
+  // Find Chrome executable: check env var first (Render buildpack sets CHROME_BIN),
+  // then fall back to common system paths
+  const findChromePath = (): string => {
+    if (process.env.CHROME_BIN) return process.env.CHROME_BIN;
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
+
+    const possiblePaths = [
+      '/usr/bin/google-chrome',
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium',
+      '/snap/bin/chromium',
+    ];
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) return p;
+    }
+    throw new Error('Chrome executable not found. Set CHROME_BIN or PUPPETEER_EXECUTABLE_PATH env var.');
+  };
+
+  const browser = await puppeteer.default.launch({
+    headless: true,
+    executablePath: findChromePath(),
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  });
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: 'domcontentloaded' });
   await page.pdf({
