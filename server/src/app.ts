@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import http from 'http';
@@ -25,6 +26,9 @@ const server = http.createServer(app);
 // to correctly read client IP from X-Forwarded-For header
 app.set('trust proxy', 1);
 
+// Gzip compression — reduces response sizes by 60-80%
+app.use(compression());
+
 // Middleware
 app.use(helmet({
   contentSecurityPolicy: false, // Disable for SPA
@@ -38,6 +42,15 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Request timeout — prevent slow requests from blocking the server
+app.use((_req, res, next) => {
+  res.setTimeout(120000, () => {
+    res.status(408).json({ message: 'Request timeout' });
+  });
+  next();
+});
+
 app.use(apiRateLimit);
 
 // API Routes
@@ -52,10 +65,20 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Serve client static files in production
+// Serve client static files in production with aggressive caching
 if (env.NODE_ENV === 'production') {
   const clientDistPath = path.resolve(__dirname, '../../client/dist');
-  app.use(express.static(clientDistPath));
+
+  // Cache hashed assets (JS/CSS bundles) for 1 year — they have content hashes in filenames
+  app.use('/assets', express.static(path.join(clientDistPath, 'assets'), {
+    maxAge: '1y',
+    immutable: true,
+  }));
+
+  // Cache other static files for 1 hour
+  app.use(express.static(clientDistPath, {
+    maxAge: '1h',
+  }));
 
   // SPA fallback — serve index.html for all non-API routes
   app.get('*', (_req, res) => {
