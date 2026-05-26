@@ -35,9 +35,10 @@ export default function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
     }
   };
 
+  // Fetch once on mount — not on every route change
   useEffect(() => {
     fetchProjects();
-  }, [location.pathname]);
+  }, []);
 
   // Listen for project updates from the editor (e.g. title change)
   useEffect(() => {

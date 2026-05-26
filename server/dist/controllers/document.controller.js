@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { DocumentModel } from '../models/Document.js';
 import { User } from '../models/User.js';
 import { isToday } from '../utils/helpers.js';
-import { getProcessingQueue } from '../queues/processing.queue.js';
+import { processingQueue } from '../queues/processing.queue.js';
 const MAX_DAILY_UPLOADS = 5;
 export const uploadDocument = async (req, res) => {
     try {
@@ -71,7 +71,7 @@ export const uploadDocument = async (req, res) => {
             status: 'uploaded',
         });
         // Add processing job to BullMQ queue
-        await getProcessingQueue().add('process-document', { documentId: doc._id.toString() }, {
+        await processingQueue.add('process-document', { documentId: doc._id.toString() }, {
             attempts: 2,
             backoff: { type: 'exponential', delay: 5000 },
         });

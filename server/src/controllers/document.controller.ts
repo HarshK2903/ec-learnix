@@ -6,7 +6,7 @@ import { AuthRequest } from '../middleware/auth.middleware.js';
 import { DocumentModel } from '../models/Document.js';
 import { User } from '../models/User.js';
 import { isToday } from '../utils/helpers.js';
-import { getProcessingQueue } from '../queues/processing.queue.js';
+import { processingQueue } from '../queues/processing.queue.js';
 
 const MAX_DAILY_UPLOADS = 5;
 
@@ -88,7 +88,7 @@ export const uploadDocument = async (
     });
 
     // Add processing job to BullMQ queue
-    await getProcessingQueue().add(
+    await processingQueue.add(
       'process-document',
       { documentId: doc._id.toString() },
       {

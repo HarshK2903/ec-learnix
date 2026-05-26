@@ -629,15 +629,8 @@ export async function convertDocxToPdf(
     </html>
   `;
 
-  const puppeteer = await import('puppeteer-core');
-  const chromium = await import('@sparticuz/chromium');
-  const executablePath =
-    process.env.PUPPETEER_EXECUTABLE_PATH || (await chromium.default.executablePath());
-  const browser = await puppeteer.default.launch({
-    args: [...chromium.default.args, '--no-sandbox', '--disable-setuid-sandbox'],
-    executablePath,
-    headless: true,
-  });
+  const puppeteer = await import('puppeteer');
+  const browser = await puppeteer.default.launch({ headless: true, args: ['--no-sandbox'] });
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: 'domcontentloaded' });
   await page.pdf({

@@ -8,9 +8,6 @@ export const env = {
   REDIS_URL: process.env.REDIS_URL || '',
   REDIS_HOST: process.env.REDIS_HOST || 'localhost',
   REDIS_PORT: parseInt(process.env.REDIS_PORT || '6379', 10),
-  REDIS_USERNAME: process.env.REDIS_USERNAME || 'default',
-  REDIS_PASSWORD: process.env.REDIS_PASSWORD || '',
-  REDIS_TLS: process.env.REDIS_TLS === 'true' || process.env.REDIS_TLS === '1',
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || 'dev-access-secret',
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret',
   JWT_ACCESS_EXPIRY: process.env.JWT_ACCESS_EXPIRY || '15m',
@@ -19,5 +16,6 @@ export const env = {
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
   GROQ_API_KEY: process.env.GROQ_API_KEY || '',
+  GROQ_CHAT_API_KEY: process.env.GROQ_CHAT_API_KEY || '',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
 };

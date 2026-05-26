@@ -6,14 +6,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { env } from './config/env.js';
 import { connectDB } from './config/db.js';
-import { assertRedisReachable } from './config/redis.js';
 import { initSocket } from './socket/index.js';
 import { startWorker } from './workers/processing.worker.js';
 import { apiRateLimit } from './middleware/rateLimit.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import documentRoutes from './routes/document.routes.js';
 import projectRoutes from './routes/project.routes.js';
-import leaderboardRoutes from './routes/leaderboard.routes.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
@@ -36,7 +34,6 @@ app.use(apiRateLimit);
 app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/projects', projectRoutes);
-app.use('/api/leaderboard', leaderboardRoutes);
 // Health check
 app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -66,7 +63,6 @@ app.use((err, _req, res, _next) => {
 // Start server
 async function start() {
     await connectDB();
-    await assertRedisReachable();
     initSocket(server);
     startWorker();
     server.listen(env.PORT, () => {

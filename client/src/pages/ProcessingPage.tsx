@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import Navbar from '@/components/layout/Navbar';
 import { getSocket, joinDocumentRoom, connectSocket, disconnectSocket } from '@/lib/socket';
 import api from '@/lib/api';
 import type { ProgressEvent } from '@/types';
@@ -138,6 +139,7 @@ export default function ProcessingPage() {
                   {STAGES.map((stage, i) => {
                     const isActive = stage.key === progress.stage;
                     const isDone = i < currentStageIdx || completed;
+                    const isPending = i > currentStageIdx && !completed;
 
                     return (
                       <div key={stage.key} className="flex items-center gap-4">

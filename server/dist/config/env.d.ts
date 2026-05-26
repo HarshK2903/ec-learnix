@@ -5,9 +5,6 @@ export declare const env: {
     REDIS_URL: string;
     REDIS_HOST: string;
     REDIS_PORT: number;
-    REDIS_USERNAME: string;
-    REDIS_PASSWORD: string;
-    REDIS_TLS: boolean;
     JWT_ACCESS_SECRET: string;
     JWT_REFRESH_SECRET: string;
     JWT_ACCESS_EXPIRY: string;

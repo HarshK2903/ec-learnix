@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Sidebar from './Sidebar';
+import ChatBot from '../ChatBot';
 
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -10,6 +11,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+      <ChatBot />
     </div>
   );
 }

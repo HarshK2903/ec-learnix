@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import Navbar from '@/components/layout/Navbar';
 import { useUploadStore } from '@/stores/uploadStore';
 import { TEMPLATE_INFO, TONE_INFO, PROCESSING_MODE_INFO } from '@/types';
 import type { TemplateType, ToneType, OutputFormat, ProcessingMode } from '@/types';

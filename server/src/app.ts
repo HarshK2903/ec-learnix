@@ -6,7 +6,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { env } from './config/env.js';
 import { connectDB } from './config/db.js';
-import { assertRedisReachable } from './config/redis.js';
 import { initSocket } from './socket/index.js';
 import { startWorker } from './workers/processing.worker.js';
 import { apiRateLimit } from './middleware/rateLimit.middleware.js';
@@ -14,6 +13,7 @@ import authRoutes from './routes/auth.routes.js';
 import documentRoutes from './routes/document.routes.js';
 import projectRoutes from './routes/project.routes.js';
 import leaderboardRoutes from './routes/leaderboard.routes.js';
+import chatRoutes from './routes/chat.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,6 +41,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
@@ -78,7 +79,6 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 // Start server
 async function start() {
   await connectDB();
-  await assertRedisReachable();
   initSocket(server);
   startWorker();
 
