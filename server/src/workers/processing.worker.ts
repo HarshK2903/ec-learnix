@@ -235,10 +235,14 @@ async function processDocument(job: Job<ProcessingJobData>): Promise<void> {
   } catch (error) {
     console.error(`❌ Processing failed for ${documentId}:`, error);
 
-    await DocumentModel.findByIdAndUpdate(documentId, {
-      status: 'failed',
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-    });
+    try {
+      await DocumentModel.findByIdAndUpdate(documentId, {
+        status: 'failed',
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+    } catch (dbErr) {
+      console.error('Failed to update document status:', dbErr);
+    }
 
     emitError(documentId, error instanceof Error ? error.message : 'Processing failed');
     throw error;
@@ -246,9 +250,11 @@ async function processDocument(job: Job<ProcessingJobData>): Promise<void> {
 }
 
 export function startWorker(): Worker {
+  const workerConnection = createRedisConnection('worker');
+
   const worker = new Worker('document-processing', processDocument, {
-    connection: createRedisConnection('worker'),
-    concurrency: 1, // Process one at a time to avoid rate limits
+    connection: workerConnection,
+    concurrency: 1,
     limiter: {
       max: 3,
       duration: 60000,
@@ -261,6 +267,12 @@ export function startWorker(): Worker {
 
   worker.on('failed', (job, err) => {
     console.error(`❌ Job ${job?.id} failed:`, err.message);
+  });
+
+  worker.on('error', (err) => {
+    // BullMQ worker-level errors (connection issues etc)
+    if (err.message.includes('ECONNRESET')) return;
+    console.error('❌ Worker error:', err.message);
   });
 
   console.log('🔧 BullMQ processing worker started');
