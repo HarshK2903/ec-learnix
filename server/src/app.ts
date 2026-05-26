@@ -78,9 +78,23 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 
 // Start server
 async function start() {
-  await connectDB();
-  initSocket(server);
-  startWorker();
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error('⚠️  MongoDB connection failed during startup. Server will still start, but API may not function fully until DB is available.', err);
+  }
+
+  try {
+    initSocket(server);
+  } catch (err) {
+    console.error('⚠️  Socket initialization failed:', err);
+  }
+
+  try {
+    startWorker();
+  } catch (err) {
+    console.error('⚠️  Worker start failed:', err);
+  }
 
   server.listen(env.PORT, () => {
     console.log(`🚀 Server running on port ${env.PORT}`);
@@ -91,7 +105,6 @@ async function start() {
 
 start().catch((err) => {
   console.error('Failed to start server:', err);
-  process.exit(1);
 });
 
 export default app;
