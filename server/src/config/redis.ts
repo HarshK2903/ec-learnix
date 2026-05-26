@@ -1,8 +1,16 @@
 import Redis from 'ioredis';
 import { env } from './env.js';
 
-const isUpstash = env.REDIS_URL?.includes('upstash.io');
 const isTLS = env.REDIS_URL?.startsWith('rediss://');
+const isUpstash = env.REDIS_URL?.includes('upstash.io');
+
+// Log constructed URL (masked) for debugging
+if (env.REDIS_URL) {
+  const masked = env.REDIS_URL.replace(/:\/\/[^@]+@/, '://***:***@');
+  console.log(`🔗 Redis URL: ${masked} (TLS: ${isTLS})`);
+} else {
+  console.warn('⚠️  No REDIS_URL configured — using localhost');
+}
 
 // Base Redis options optimized for Upstash + BullMQ
 const baseOptions: Record<string, unknown> = {
@@ -11,15 +19,10 @@ const baseOptions: Record<string, unknown> = {
   family: 4, // Force IPv4 (Upstash works better with IPv4)
   keepAlive: 10000, // Aggressive keepalive to prevent Upstash idle drops
   connectTimeout: 15000,
-  // Upstash-specific: prevent command timeout during reconnection
   enableOfflineQueue: true,
   retryStrategy(times: number) {
-    if (times > 20) {
-      console.error('❌ Redis: Max reconnection attempts reached');
-      return null; // Stop retrying
-    }
-    // Exponential backoff: 200ms, 400ms, 800ms... capped at 5s
-    return Math.min(times * 200, 5000);
+    // Exponential backoff: 500ms, 1s, 2s, 4s, 5s (capped)
+    return Math.min(times * 500, 5000);
   },
   reconnectOnError(err: Error) {
     return err.message.includes('ECONNRESET') || err.message.includes('READONLY');
@@ -30,12 +33,9 @@ const baseOptions: Record<string, unknown> = {
 if (isTLS) {
   baseOptions.tls = {
     rejectUnauthorized: false,
-    // Upstash requires SNI for TLS
     ...(isUpstash ? { servername: new URL(env.REDIS_URL).hostname } : {}),
   };
 }
-
-let connectionCount = 0;
 
 /**
  * Create a new Redis connection instance.
@@ -43,9 +43,7 @@ let connectionCount = 0;
  * because Workers use blocking Redis commands (BRPOPLPUSH).
  */
 export function createRedisConnection(label?: string): Redis {
-  const id = ++connectionCount;
-  const tag = label || `conn-${id}`;
-  let hasConnected = false;
+  const tag = label || 'redis';
 
   const conn = env.REDIS_URL
     ? new Redis(env.REDIS_URL, baseOptions)
@@ -55,21 +53,15 @@ export function createRedisConnection(label?: string): Redis {
         ...baseOptions,
       });
 
-  conn.on('connect', () => {
-    if (!hasConnected) {
-      console.log(`✅ Redis [${tag}] connected`);
-      hasConnected = true;
-    }
+  // Only log once on first successful ready
+  conn.once('ready', () => {
+    console.log(`✅ Redis [${tag}] ready`);
   });
 
   conn.on('error', (err) => {
     // Silently handle ECONNRESET (auto-recovered by reconnect strategy)
     if (err.message.includes('ECONNRESET')) return;
     console.error(`❌ Redis [${tag}] error:`, err.message);
-  });
-
-  conn.on('close', () => {
-    hasConnected = false; // Allow re-logging on next successful connect
   });
 
   return conn;
